@@ -1,12 +1,12 @@
+#include <Arduino.h>
 #include "input.h"
 
 String bacaStatus() {
-  if (Serial.available() > 0) {
-    String status = Serial.readStringUntil('\n');
-    status.trim();
+    if (Serial.available() > 0) {
+        String status = Serial.readStringUntil('\n');
+        status.trim();
+        return status;
+    }
 
-    return status;
-  }
-
-  return "";
+    return "";
 }

@@ -39,7 +39,11 @@ void setup() {
 void loop() {
   String dataMasuk = bacaStatus();
 
-  if (dataMasuk != "") {
+  // Proses hanya label klasifikasi yang valid
+  if (dataMasuk == "Normal" ||
+      dataMasuk == "Constant Jamming" ||
+      dataMasuk == "Periodic Jamming") {
+
     waktuTerakhirDiterima = millis();
     sinyalPernahDiterima = true;
     sedangMenungguSinyal = false;
@@ -53,13 +57,14 @@ void loop() {
     else if (dataMasuk == "Periodic Jamming") {
       statusSaatIni = PERIODIC_JAMMING;
     }
-    else {
-      statusSaatIni = STATUS_TIDAK_DIKENAL;
-    }
 
     tampilkanStatus(statusSaatIni);
   }
+  else if (dataMasuk != "") {
+    Serial.println("Data tidak dikenal, diabaikan.");
+  }
 
+  // Periksa timeout setelah 5 detik tanpa status valid
   bool waktuHabis =
       sinyalPernahDiterima &&
       millis() - waktuTerakhirDiterima >= BATAS_WAKTU_SINYAL;

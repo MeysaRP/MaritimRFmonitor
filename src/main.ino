@@ -2,13 +2,24 @@
 #include "input.h"
 #include "output.h"
 #include "led.h"
+#include "display.h"
 
-// Pin GPIO ESP32 — sesuaikan dengan wiring saat perangkat tersedia.
 const int LED_HIJAU = 25;
 const int LED_MERAH = 26;
 const int LED_KUNING = 27;
 
 const unsigned long BAUD_RATE = 115200;
+const unsigned long BATAS_WAKTU_SINYAL = 5000;
+
+unsigned long waktuSinyalTerakhir = 0;
+bool sinyalDiterima = false;
+bool statusMenungguDitampilkan = false;
+
+void matikanSemuaLED() {
+    digitalWrite(LED_HIJAU, LOW);
+    digitalWrite(LED_MERAH, LOW);
+    digitalWrite(LED_KUNING, LOW);
+}
 
 void aturLED(StatusJamming status) {
     StatusLED led = indikatorLED(static_cast<int>(status));
@@ -19,7 +30,10 @@ void aturLED(StatusJamming status) {
 }
 
 void tampilkanStatus(StatusJamming status) {
-    Serial.println(pesanStatus(status));
+    const char* pesan = pesanStatus(status);
+
+    Serial.println(pesan);
+    tampilkanStatusOLED(pesan);
     aturLED(status);
 
     StatusLED led = indikatorLED(static_cast<int>(status));
@@ -36,12 +50,6 @@ void tampilkanStatus(StatusJamming status) {
     Serial.println("------------------------");
 }
 
-void matikanSemuaLED() {
-    digitalWrite(LED_HIJAU, LOW);
-    digitalWrite(LED_MERAH, LOW);
-    digitalWrite(LED_KUNING, LOW);
-}
-
 void setup() {
     Serial.begin(BAUD_RATE);
 
@@ -50,10 +58,11 @@ void setup() {
     pinMode(LED_KUNING, OUTPUT);
 
     matikanSemuaLED();
+    mulaiDisplay();
+    tampilkanMenungguSinyal();
 
     Serial.println("=== MaritimRFmonitor ===");
     Serial.println("Visualisasi Status Jamming");
-    Serial.println("Menunggu data klasifikasi...");
     Serial.println("Kirim salah satu status berikut:");
     Serial.println("Normal");
     Serial.println("Constant Jamming");
@@ -66,16 +75,37 @@ void loop() {
 
     if (status == "Normal") {
         tampilkanStatus(NORMAL);
+        waktuSinyalTerakhir = millis();
+        sinyalDiterima = true;
+        statusMenungguDitampilkan = false;
     }
     else if (status == "Constant Jamming") {
         tampilkanStatus(CONSTANT_JAMMING);
+        waktuSinyalTerakhir = millis();
+        sinyalDiterima = true;
+        statusMenungguDitampilkan = false;
     }
     else if (status == "Periodic Jamming") {
         tampilkanStatus(PERIODIC_JAMMING);
+        waktuSinyalTerakhir = millis();
+        sinyalDiterima = true;
+        statusMenungguDitampilkan = false;
     }
     else if (status != "") {
         Serial.print("Status tidak dikenali: ");
         Serial.println(status);
+    }
+
+    if (
+        !sinyalDiterima ||
+        millis() - waktuSinyalTerakhir >= BATAS_WAKTU_SINYAL
+    ) {
         matikanSemuaLED();
+
+        if (!statusMenungguDitampilkan) {
+            Serial.println("Menunggu Sinyal...");
+            tampilkanMenungguSinyal();
+            statusMenungguDitampilkan = true;
+        }
     }
 }

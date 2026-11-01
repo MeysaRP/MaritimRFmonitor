@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include "input.h"
 #include "output.h"
@@ -61,41 +62,43 @@ void setup() {
     mulaiDisplay();
     tampilkanMenungguSinyal();
 
+    statusMenungguDitampilkan = true;
+
     Serial.println("=== MaritimRFmonitor ===");
     Serial.println("Visualisasi Status Jamming");
-    Serial.println("Kirim salah satu status berikut:");
-    Serial.println("Normal");
-    Serial.println("Constant Jamming");
-    Serial.println("Periodic Jamming");
+    Serial.println("Menunggu data klasifikasi...");
+    Serial.println("Kirim: Normal, Constant Jamming, atau Periodic Jamming");
     Serial.println("------------------------");
 }
 
 void loop() {
     String status = bacaStatus();
 
-    if (status == "Normal") {
-        tampilkanStatus(NORMAL);
+    // Hanya menerima status klasifikasi yang valid
+    if (
+        status == "Normal" ||
+        status == "Constant Jamming" ||
+        status == "Periodic Jamming"
+    ) {
         waktuSinyalTerakhir = millis();
         sinyalDiterima = true;
         statusMenungguDitampilkan = false;
-    }
-    else if (status == "Constant Jamming") {
-        tampilkanStatus(CONSTANT_JAMMING);
-        waktuSinyalTerakhir = millis();
-        sinyalDiterima = true;
-        statusMenungguDitampilkan = false;
-    }
-    else if (status == "Periodic Jamming") {
-        tampilkanStatus(PERIODIC_JAMMING);
-        waktuSinyalTerakhir = millis();
-        sinyalDiterima = true;
-        statusMenungguDitampilkan = false;
+
+        if (status == "Normal") {
+            tampilkanStatus(NORMAL);
+        }
+        else if (status == "Constant Jamming") {
+            tampilkanStatus(CONSTANT_JAMMING);
+        }
+        else if (status == "Periodic Jamming") {
+            tampilkanStatus(PERIODIC_JAMMING);
+        }
     }
     else if (status != "") {
-        Serial.print("Status tidak dikenali: ");
-        Serial.println(status);
+        Serial.println("Data tidak dikenal, diabaikan.");
     }
 
+    // Periksa watchdog setelah 5 detik tanpa status valid
     if (
         !sinyalDiterima ||
         millis() - waktuSinyalTerakhir >= BATAS_WAKTU_SINYAL

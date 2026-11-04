@@ -1,11 +1,32 @@
 #include <iostream>
 #include <cassert>
 
+using namespace std;
+
 const unsigned long BATAS_WAKTU_SINYAL = 5000;
+
+const string RESET  = "\033[0m";
+const string GREEN  = "\033[32m";
+const string RED    = "\033[31m";
+const string YELLOW = "\033[33m";
+const string CYAN   = "\033[36m";
+const string BOLD   = "\033[1m";
+const string GRAY   = "\033[90m";
 
 bool sinyalPernahDiterima = false;
 bool sedangMenungguSinyal = true;
 unsigned long waktuTerakhirDiterima = 0;
+
+void garis() {
+    cout << CYAN
+         << "+--------------------------------------------------+\n"
+         << RESET;
+}
+
+void tampilkanHasil(const string& pesan) {
+    cout << "  " << GREEN << "[PASS] " << RESET
+         << pesan << "\n";
+}
 
 void terimaSinyal(unsigned long waktu) {
     waktuTerakhirDiterima = waktu;
@@ -24,26 +45,43 @@ void periksaWatchdog(unsigned long waktuSekarang) {
 }
 
 int main() {
-    // Uji 1: Saat mulai, perangkat menunggu sinyal.
+    cout << CYAN << BOLD;
+    garis();
+    cout << "          MARITIME RF MONITOR\n";
+    cout << "             WATCHDOG TEST\n";
+    garis();
+    cout << RESET;
+
+    cout << "\n" << YELLOW << BOLD
+         << "  [TEST 01] KONDISI AWAL\n" << RESET;
     periksaWatchdog(0);
     assert(sedangMenungguSinyal);
-    std::cout << "PASS: Awal program menunggu sinyal\n";
+    tampilkanHasil("Program menunggu sinyal");
 
-    // Uji 2: Sinyal diterima, status menunggu berakhir.
+    cout << "\n" << CYAN << BOLD
+         << "  [TEST 02] PENERIMAAN SINYAL\n" << RESET;
     terimaSinyal(1000);
     assert(!sedangMenungguSinyal);
-    std::cout << "PASS: Sinyal diterima\n";
+    tampilkanHasil("Sinyal berhasil diterima");
 
-    // Uji 3: Belum melewati 5 detik, status tetap aktif.
+    cout << "\n" << CYAN << BOLD
+         << "  [TEST 03] PEMERIKSAAN TIMEOUT\n" << RESET;
     periksaWatchdog(5999);
     assert(!sedangMenungguSinyal);
-    std::cout << "PASS: Sinyal belum timeout sebelum 5 detik\n";
+    tampilkanHasil("Status aktif sebelum 5 detik");
 
-    // Uji 4: Tepat 5 detik tanpa sinyal baru, watchdog aktif.
+    cout << "\n" << RED << BOLD
+         << "  [TEST 04] WATCHDOG AKTIF\n" << RESET;
     periksaWatchdog(6000);
     assert(sedangMenungguSinyal);
-    std::cout << "PASS: Watchdog aktif setelah 5 detik\n";
+    tampilkanHasil("Watchdog aktif setelah 5 detik");
 
-    std::cout << "Semua pengujian logika watchdog berhasil.\n";
+    cout << "\n";
+    garis();
+    cout << GREEN << BOLD
+         << "       SEMUA PENGUJIAN BERHASIL!\n"
+         << RESET;
+    garis();
+
     return 0;
 }
